@@ -3,52 +3,31 @@ from datetime import datetime
 
 st.set_page_config(page_title="طباعة الشيكات الحقيقية", layout="wide")
 
-# إعداد قيم الهوامش الافتراضية في الذاكرة (بالبكسل/المليمتر)
-if 'top_pos' not in st.session_state: st.session_state.top_pos = 50
-if 'left_pos' not in st.session_state: st.session_state.left_pos = 60
+# إعداد قيم المعايرة الافتراضية في الذاكرة
+if 'top_pos' not in st.session_state: st.session_state.top_pos = 60
+if 'left_pos' not in st.session_state: st.session_state.left_pos = 50
 if 'date_pos' not in st.session_state: st.session_state.date_pos = 20
-if 'amt_pos' not in st.session_state: st.session_state.amt_pos = 40
+if 'amt_pos' not in st.session_state: st.session_state.amt_pos = 140
 
-# تخصيص واجهة البرنامج للتحكم والطباعة الحقيقية
+# تخصيص واجهة البرنامج وفصل عناصر التحكم تماماً عن الطباعة
 st.markdown(f"""
     <style>
     h1, h2, h3, p, label, .stButton {{ text-align: right; direction: rtl; }}
-    div.stButton > button:first-child {{ background-color: #D32F2F; color:white; font-size:18px; width: 100%; }}
+    div.stButton > button:first-child {{ background-color: #E64A19; color:white; font-size:18px; width: 100%; }}
     
-    /* شكل الشيك الحقيقي على الشاشة للتوضيح فقط */
-    .real-cheque-preview {{
-        border: 1px solid #ccc;
-        padding: 20px;
-        position: relative;
-        width: 100%;
-        height: 250px;
-        background-color: #fff;
-    }}
-    
-    /* التوزيع الفعلي للنصوص عند الطباعة الحقيقية */
-    .print-field {{ position: absolute; font-family: 'Arial', sans-serif; font-size: 16px; font-weight: bold; color: #000; }}
-    
-    /* عند إرسال الشيك للطابعة الحقيقية: نخفي كل شيء ما عدا النصوص الصافية */
+    /* عند إرسال الأمر للطابعة الحقيقية: يتم إخفاء كل شيء في الموقع تماماً */
     @media print {{
-        body * {{ visibility: hidden; }}
-        .printable-data, .printable-data * {{ visibility: visible; }}
-        .printable-data {{
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-        }}
-        .no-print {{ display: none !important; }}
+        .no-print, [data-testid="stSidebar"], [data-testid="stHeader"] {{ display: none !important; }}
+        body {{ background-color: white; }}
     }}
     </style>
     """, unsafe_allow_html=True)
 
+# بداية قسم لوحة التحكم (يختفي تماماً عند الطباعة)
 st.markdown('<div class="no-print">', unsafe_allow_html=True)
-st.title("🖨️ محرك طباعة الشيكات الحقيقية (تحكم بالمليمتر)")
-st.caption("هذا النظام يطبع النصوص الصافية فقط فوق دفتر شيكاتك الأصلي")
+st.title("🖨️ محرك طباعة الشيكات الحقيقية")
+st.caption("يقوم النظام بطباعة النصوص الصافية فقط بدقة لتسقط داخل خانات دفتر شيكاتك الأصلي")
 
-# مدخلات الشيك
 with st.form("cheque_data"):
     col1, col2 = st.columns(2)
     with col1:
@@ -58,50 +37,62 @@ with st.form("cheque_data"):
         ch_amount = st.number_input("المبلغ بالأرقام", min_value=0.0, step=50.0)
         ch_date = st.date_input("تاريخ الاستحقاق", datetime.now())
     
-    submitted = st.form_submit_button("تحديث ومعاينة مكان النص")
+    submitted = st.form_submit_button("تحديث الحقول والمعاينة")
 
-st.markdown("### ⚙️ لوحة معايرة أبعاد بنكك الخاص (حرك النصوص لتطابق خانات شيكك الحقيقي)")
+st.markdown("### ⚙️ لوحة معايرة الأبعاد (حرك النصوص لتطابق خانات شيكك الورقي الحقيقي)")
 col_load1, col_load2 = st.columns(2)
 with col_load1:
-    st.session_state.top_pos = st.slider("مستوى نص (اسم المستفيد) لأسفل ولأعلى", 10, 200, st.session_state.top_pos)
-    st.session_state.amt_pos = st.slider("مستوى (المبلغ بالأرقام) لأسفل ولأعلى", 10, 200, st.session_state.amt_pos)
+    st.session_state.top_pos = st.slider("مستوى نص (اسم المستفيد والتفقيط) لأسفل ولأعلى", 10, 300, st.session_state.top_pos)
+    st.session_state.amt_pos = st.slider("مستوى (المبلغ بالأرقام) لأسفل ولأعلى", 10, 400, st.session_state.amt_pos)
 with col_load2:
-    st.session_state.left_pos = st.slider("مسافة (اسم المستفيد) من اليمين", 10, 500, st.session_state.left_pos)
+    st.session_state.left_pos = st.slider("إزاحة (اسم المستفيد والتفقيط) من اليمين إلى اليسار", 10, 500, st.session_state.left_pos)
     st.session_state.date_pos = st.slider("مكان (التاريخ) لأسفل ولأعلى", 10, 200, st.session_state.date_pos)
 
 st.markdown('</div>', unsafe_allow_html=True)
+# نهاية قسم لوحة التحكم
 
 # ----------------------------------------------------
-# بناء طبقة البيانات الصافية التي ستسقط فوق الشيك الورقي
+# بناء طبقة البيانات الحقيقية النقية للطباعة
 # ----------------------------------------------------
-st.markdown("### 👁️ شكل النصوص التي ستطبع فوق ورقة شيكك")
+# تجهيز النصوص وتنسيقها برمجياً لتقرأها الطابعة كـ نصوص حرة بدون أكواد ظاهرة
+date_str = ch_date.strftime('%d / %m / %Y')
+amt_str = f"# {ch_amount:,.2f} #" if ch_amount > 0 else ""
 
-cheque_html = f"""
-<div class="printable-data real-cheque-preview">
-    <!-- التاريخ -->
-    <div class="print-field" style="top: {st.session_state.date_pos}px; left: 50px;">
-        {ch_date.strftime('%d / %m / %Y')}
+print_layout = f"""
+<div style="position: relative; width: 100%; height: 260px; font-family: 'Arial'; font-size: 18px; font-weight: bold; color: black; line-height: 1.6; direction: rtl;">
+    <!-- التاريخ أعلى اليسار -->
+    <div style="position: absolute; top: {st.session_state.date_pos}px; left: 60px; direction: ltr;">
+        {date_str}
     </div>
     
     <!-- اسم المستفيد -->
-    <div class="print-field" style="top: {st.session_state.top_pos}px; right: {st.session_state.left_pos}px;">
-        {ch_name if ch_name else ''}
+    <div style="position: absolute; top: {st.session_state.top_pos}px; right: {st.session_state.left_pos}px;">
+        {ch_name}
     </div>
     
-    <!-- المبلغ تفقيط -->
-    <div class="print-field" style="top: {st.session_state.top_pos + 40}px; right: {st.session_state.left_pos - 20}px; width: 60%;">
-        {ch_text_amount if ch_text_amount else ''}
+    <!-- المبلغ تفقيطاً -->
+    <div style="position: absolute; top: {st.session_state.top_pos + 45}px; right: {st.session_state.left_pos - 20}px; width: 65%;">
+        {ch_text_amount}
     </div>
     
-    <!-- المبلغ أرقام -->
-    <div class="print-field" style="top: {st.session_state.amt_pos}px; left: 60px; background:#f9f9f9; padding:2px 10px;">
-        # {ch_amount:,.2f} #
+    <!-- المبلغ بالأرقام -->
+    <div style="position: absolute; top: {st.session_state.amt_pos}px; left: 50px; font-size: 20px; direction: ltr;">
+        {amt_str}
     </div>
 </div>
 """
-st.markdown(cheque_html, unsafe_allow_html=True)
 
-st.markdown('<div class="no-print" style="margin-top:20px;">', unsafe_allow_html=True)
-if st.button("🖨️ ابدأ الطباعة الحقيقية الآن"):
-    st.markdown("<script>window.print();</script>", unsafe_allow_html=True)
+# عرض البيانات الصافية في الصفحة باستخدام المكون المعتمد من المنصة لضمان عدم ظهور الأكواد
+st.components.v1.html(print_layout, height=270)
+
+# زر تشغيل أمر الطباعة في المتصفح
+st.markdown('<div class="no-print">', unsafe_allow_html=True)
+if st.button("🖨️ ابدأ الطباعة على الشيك الورقي الحقيقي"):
+    st.markdown("""
+        <script>
+        var shareMenu = window.parent.document.querySelector('[data-testid="stStatusWidget"]');
+        if(shareMenu) shareMenu.style.display = 'none';
+        window.print();
+        </script>
+        """, unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
